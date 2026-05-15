@@ -77,7 +77,7 @@ scikit-learn==1.2.2
 1. **Clone hoặc tải dự án**:
 
     ```bash
-    git clone https://github.com/HiepChill/Facial_Recognition_Attendance_System.git
+    git clone https://github.com/Phongpronekk/face-recognition-attendance-system.git
     cd face_recognition_system
 
     ```

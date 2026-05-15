@@ -135,8 +135,7 @@ def draw_recognition_result(frame, left, top, right, bottom, match_info, similar
         # Kiểm tra và ghi nhận điểm danh
         if can_record_attendance(user_id):
             # event_type = determine_event_type(user_id)
-            event_type = "check"
-            log_attendance(name, user_id, event_type)
+            event_type = log_attendance(name, user_id)
             recognized_users.append({
                 "user_id": user_id,
                 "name": name,

@@ -5,23 +5,43 @@ from .config import ATTENDANCE_DIR, ATTENDANCE_INTERVAL_MINUTES
 
 # Từ điển lưu thời gian điểm danh gần nhất của mỗi người
 last_attendance_time = {}
+# Từ điển lưu trạng thái check-in / check-out gần nhất
+last_event_type = {}
 
-def log_attendance(name, user_id, event_type):
-    """Ghi nhận điểm danh"""
+def log_attendance(name, user_id):
+    """Ghi nhận điểm danh với check-in / check-out"""
     today = datetime.now().strftime("%Y-%m-%d")
     csv_path = os.path.join(ATTENDANCE_DIR, f"attendance_{today}.csv")
-    
-    # Tạo file CSV với header nếu chưa tồn tại
+
     if not os.path.exists(csv_path):
         with open(csv_path, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['Name', 'User ID', 'Time', 'Event'])
-    
-    # Ghi thông tin điểm danh
+
+    last_event = None
+
+    # Đọc sự kiện gần nhất của user trong file CSV
+    with open(csv_path, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        next(reader, None)
+
+        for row in reader:
+            if len(row) >= 4 and row[1] == str(user_id):
+                last_event = row[3]
+
+    # Nếu lần trước check-in thì lần này check-out
+    if last_event == "check-in":
+        event_type = "check-out"
+    else:
+        event_type = "check-in"
+
     current_time = datetime.now().strftime("%H:%M:%S")
+
     with open(csv_path, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow([name, user_id, current_time, event_type])
+
+    return event_type
 
 def can_record_attendance(user_id):
     """Kiểm tra thời gian giữa 2 lần điểm danh"""
