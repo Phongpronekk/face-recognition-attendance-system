@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ thống điểm danh</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3248;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e8eaf0;
+    --text2: #8b90a7;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: -apple-system, 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 60% 40%, #1a2550 0%, var(--bg) 70%);
+  }
+
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 380px;
+    box-shadow: 0 24px 60px #0007;
+  }
+
+  .login-logo {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .login-box h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .login-box p { color: var(--text2); font-size: 14px; margin-bottom: 32px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field select option { background: var(--bg); }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: .88; }
+
+  .login-error {
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+
+  /* ── LAYOUT ── */
+  #app { display: none; min-height: 100vh; }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 20px 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .sidebar-logo .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .sidebar-logo span { font-size: 13px; font-weight: 700; line-height: 1.3; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text2);
+    border-radius: 0;
+    transition: all .15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); background: #4f8ef710; border-left-color: var(--accent); }
+  .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+
+  .nav-label-group {
+    padding: 16px 20px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .avatar.admin { background: linear-gradient(135deg,#4f8ef7,#7c5cfc); }
+  .avatar.staff { background: linear-gradient(135deg,#22c55e,#059669); }
+  .user-details { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text2); }
+  .logout-btn {
+    background: none; border: none; color: var(--text2);
+    cursor: pointer; font-size: 16px; padding: 4px;
+    transition: color .2s;
+  }
+  .logout-btn:hover { color: var(--red); }
+
+  /* ── MAIN ── */
+  .main { margin-left: 220px; padding: 28px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { font-size: 22px; font-weight: 700; }
+  .page-header p { color: var(--text2); font-size: 14px; margin-top: 4px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ── CAMERA ── */
+  .camera-wrap {
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .camera-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .camera-wrap .cam-placeholder {
+    text-align: center; color: var(--text2);
+  }
+  .cam-placeholder .cam-icon { font-size: 48px; margin-bottom: 12px; }
+  .cam-placeholder p { font-size: 14px; }
+
+  .cam-status {
+    position: absolute; top: 12px; left: 12px;
+    background: #000a;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.live { background: var(--green); animation: pulse 1.5s infinite; }
+  .dot.off { background: var(--text2); }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; } 50% { opacity:.4; }
+  }
+
+  .cam-controls { display: flex; gap: 10px; margin-top: 14px; }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--border); }
+  .btn.btn-green { background: #22c55e20; border-color: var(--green); color: var(--green); }
+  .btn.btn-green:hover { background: #22c55e35; }
+  .btn.btn-red { background: #ef444420; border-color: var(--red); color: var(--red); }
+  .btn.btn-red:hover { background: #ef444435; }
+  .btn.btn-blue { background: #4f8ef720; border-color: var(--accent); color: var(--accent); }
+  .btn.btn-blue:hover { background: #4f8ef735; }
+
+  /* ── ATTENDANCE TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--text2);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid #1e2133; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #ffffff05; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.in { background: #22c55e20; color: var(--green); }
+  .badge.out { background: #f59e0b20; color: var(--yellow); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px;
+    color: var(--text2);
+  }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── REGISTER FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group.full { grid-column: 1/-1; }
+  .form-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .form-group input[type=text] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .form-group input[type=text]:focus { border-color: var(--accent); }
+
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: #4f8ef710; }
+  .upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-area p { font-size: 14px; color: var(--text2); }
+  .upload-area span { font-size: 12px; color: var(--text2); margin-top: 4px; display: block; }
+
+  .preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .preview-item {
+    width: 80px; height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+  .preview-item .remove-img {
+    position: absolute; top: 3px; right: 3px;
+    background: #000a;
+    border: none; border-radius: 50%;
+    width: 18px; height: 18px;
+    color: #fff; font-size: 10px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert.success { background: #22c55e20; border: 1px solid #22c55e40; color: var(--green); }
+  .alert.error { background: #ef444420; border: 1px solid #ef444440; color: var(--red); }
+
+  /* ── USERS ── */
+  .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; }
+  .user-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .user-card .user-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+    margin: 0 auto 12px;
+  }
+  .user-card .u-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .user-card .u-id { font-size: 12px; color: var(--text2); font-family: monospace; }
+
+  /* ── STATS ── */
+  .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .stat-value { font-size: 32px; font-weight: 700; margin-top: 6px; }
+  .stat-value.blue { color: var(--accent); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.yellow { color: var(--yellow); }
+
+  /* date picker */
+  .date-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .date-row input[type=date] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    color-scheme: dark;
+  }
+  .date-row input[type=date]:focus { border-color: var(--accent); }
+
+  /* loading */
+  .loading { text-align: center; padding: 32px; color: var(--text2); font-size: 14px; }
+  .spinner {
+    display: inline-block; width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">🎯</div>
+    <h1>Hệ thống điểm danh</h1>
+    <p>Đăng nhập để tiếp tục</p>
+
+    <div class="field">
+      <label>Tên đăng nhập</label>
+      <input type="text" id="login-username" placeholder="Nhập tên đăng nhập" />
+    </div>
+    <div class="field">
+      <label>Mật khẩu</label>
+      <input type="password" id="login-password" placeholder="Nhập mật khẩu" />
+    </div>
+    <div class="field">
+      <label>Vai trò</label>
+      <select id="login-role">
+        <option value="admin">👑 Quản trị viên</option>
+        <option value="staff">👤 Nhân viên</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-error" id="login-error">Sai tên đăng nhập hoặc mật khẩu</div>
+
+    <div style="margin-top:20px;font-size:12px;color:var(--text2);background:var(--bg);border-radius:8px;padding:12px;">
+      <b style="color:var(--text)">Tài khoản demo:</b><br>
+      Admin: <code>admin</code> / <code>admin123</code><br>
+      Nhân viên: <code>nhanvien</code> / <code>nv123</code>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🎯</div>
+      <span>Hệ thống<br>điểm danh</span>
+    </div>
+
+    <!-- Staff nav -->
+    <div id="nav-staff">
+      <div class="nav-label-group">Nhân viên</div>
+      <div class="nav-item active" data-page="camera" onclick="navigate('camera')">
+        <span class="icon">📷</span> Quét khuôn mặt
+      </div>
+      <div class="nav-item" data-page="attendance" onclick="navigate('attendance')">
+        <span class="icon">📋</span> Xem điểm danh
+      </div>
+    </div>
+
+    <!-- Admin nav -->
+    <div id="nav-admin" style="display:none">
+      <div class="nav-label-group">Quản trị</div>
+      <div class="nav-item" data-page="register" onclick="navigate('register')">
+        <span class="icon">➕</span> Đăng ký khuôn mặt
+      </div>
+      <div class="nav-item" data-page="users" onclick="navigate('users')">
+        <span class="icon">👥</span> Danh sách người dùng
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar" id="sidebar-avatar">A</div>
+        <div class="user-details">
+          <div class="user-name" id="sidebar-name">Admin</div>
+          <div class="user-role" id="sidebar-role">Quản trị viên</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Đăng xuất">⏏</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- PAGE: Camera -->
+    <div class="page active" id="page-camera">
+      <div class="page-header">
+        <h2>📷 Quét khuôn mặt</h2>
+        <p>Stream trực tiếp từ camera — hệ thống tự động nhận diện và ghi nhận điểm danh</p>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="camera-wrap" id="cam-wrap">
+            <div class="cam-status" id="cam-status-badge">
+              <div class="dot off" id="cam-dot"></div>
+              <span id="cam-status-text">Chưa bật</span>
+            </div>
+            <img id="cam-stream" src="" style="display:none" alt="Camera stream" />
+            <div class="cam-placeholder" id="cam-placeholder">
+              <div class="cam-icon">📷</div>
+              <p>Nhấn "Bật camera" để bắt đầu</p>
+            </div>
+          </div>
+          <div class="cam-controls">
+            <button class="btn btn-green" id="btn-start-cam" onclick="startCamera()">▶ Bật camera</button>
+            <button class="btn btn-red" id="btn-stop-cam" onclick="stopCamera()" style="display:none">⏹ Tắt camera</button>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="height:100%">
+            <div style="font-size:14px;font-weight:600;margin-bottom:14px;">📝 Sự kiện gần đây</div>
+            <div id="recent-events">
+              <div class="empty-state">
+                <div class="empty-icon">⏳</div>
+                <p>Chưa có sự kiện nào</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Attendance -->
+    <div class="page" id="page-attendance">
+      <div class="page-header">
+        <h2>📋 Bảng điểm danh</h2>
+        <p>Xem lịch sử điểm danh theo ngày</p>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Tổng bản ghi</div>
+          <div class="stat-value blue" id="stat-total">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Check-in</div>
+          <div class="stat-value green" id="stat-in">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Check-out</div>
+          <div class="stat-value yellow" id="stat-out">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="date-row">
+          <input type="date" id="date-picker" onchange="loadAttendance()" />
+          <button class="btn btn-blue" onclick="loadAttendance()">🔄 Tải lại</button>
+        </div>
+        <div class="table-wrap" id="attendance-table-wrap">
+          <div class="loading"><span class="spinner"></span>Đang tải...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Register (Admin only) -->
+    <div class="page" id="page-register">
+      <div class="page-header">
+        <h2>➕ Đăng ký khuôn mặt</h2>
+        <p>Thêm người dùng mới vào hệ thống nhận diện</p>
+      </div>
+      <div class="grid-2" style="align-items:start">
+        <div class="card">
+          <div id="reg-alert-success" class="alert success">✅ Đăng ký thành công!</div>
+          <div id="reg-alert-error" class="alert error"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Mã nhân viên *</label>
+              <input type="text" id="reg-id" placeholder="Ví dụ: NV001" />
+            </div>
+            <div class="form-group">
+              <label>Họ và tên *</label>
+              <input type="text" id="reg-name" placeholder="Ví dụ: Nguyễn Văn A" />
+            </div>
+          </div>
+
+          <div class="form-group full">
+            <label>Ảnh khuôn mặt * (tối thiểu 1 ảnh)</label>
+            <div class="upload-area" id="upload-area">
+              <input type="file" id="reg-images" accept="image/*" multiple onchange="previewImages(event)" />
+              <div class="upload-icon">🖼️</div>
+              <p>Kéo thả hoặc nhấn để chọn ảnh</p>
+              <span>JPG, PNG · Mỗi ảnh chỉ 1 khuôn mặt</span>
+            </div>
+            <div class="preview-grid" id="preview-grid"></div>
+          </div>
+
+          <button class="btn btn-blue" style="width:100%;justify-content:center;padding:12px" onclick="registerFace()">
+            ➕ Đăng ký
+          </button>
+        </div>
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px;">💡 Hướng dẫn</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+            <p>• Chụp khuôn mặt ở nhiều góc độ khác nhau (thẳng, nghiêng trái, nghiêng phải)</p><br>
+            <p>• Ánh sáng đầy đủ, không bị tối hoặc ngược sáng</p><br>
+            <p>• Mỗi ảnh chỉ có đúng 1 khuôn mặt</p><br>
+            <p>• Càng nhiều ảnh, độ chính xác càng cao (khuyến nghị 5–10 ảnh)</p><br>
+            <p>• Không đeo kính đen, khẩu trang khi chụp</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Users (Admin only) -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <h2>👥 Danh sách người dùng</h2>
+        <p>Tất cả người dùng đã đăng ký trong hệ thống</p>
+      </div>
+      <div class="card">
+        <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:14px;color:var(--text2)">Tổng: <b id="user-count" style="color:var(--text)">0</b> người dùng</div>
+          <button class="btn btn-blue" onclick="loadUsers()">🔄 Tải lại</button>
+        </div>
+        <div id="users-grid" class="users-grid">
+          <div class="loading"><span class="spinner"></span>Đang tải...</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = 'http://localhost:8080';
+
+// ── AUTH ──
+const ACCOUNTS = {
+  admin:    { password: 'admin123', role: 'admin',  displayName: 'Quản trị viên' },
+  nhanvien: { password: 'nv123',    role: 'staff',  displayName: 'Nhân Viên' },
+};
+
+let currentUser = null;
+let cameraActive = false;
+let pollInterval = null;
+
+function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const role = document.getElementById('login-role').value;
+  const errEl = document.getElementById('login-error');
+
+  const acc = ACCOUNTS[username];
+  if (!acc || acc.password !== password || acc.role !== role) {
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  currentUser = { username, role: acc.role, displayName: acc.displayName };
+  localStorage.setItem('session', JSON.stringify(currentUser));
+  initApp();
+}
+
+function doLogout() {
+  stopCamera();
+  localStorage.removeItem('session');
+  currentUser = null;
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function initApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const av = document.getElementById('sidebar-avatar');
+  av.textContent = currentUser.displayName[0];
+  av.className = 'avatar ' + (currentUser.role === 'admin' ? 'admin' : 'staff');
+  document.getElementById('sidebar-name').textContent = currentUser.displayName;
+  document.getElementById('sidebar-role').textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+
+  if (currentUser.role === 'admin') {
+    document.getElementById('nav-admin').style.display = 'block';
+    navigate('camera');
+  } else {
+    document.getElementById('nav-admin').style.display = 'none';
+    navigate('camera');
+  }
+
+  // Set date picker to today
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('date-picker').value = today;
+}
+
+// ── NAVIGATION ──
+function navigate(page) {
+  // Check permission
+  if ((page === 'register' || page === 'users') && currentUser.role !== 'admin') return;
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+
+  if (page === 'attendance') loadAttendance();
+  if (page === 'users') loadUsers();
+}
+
+// ── CAMERA ──
+function startCamera() {
+  const stream = document.getElementById('cam-stream');
+  const placeholder = document.getElementById('cam-placeholder');
+  const dot = document.getElementById('cam-dot');
+  const statusText = document.getElementById('cam-status-text');
+
+  stream.src = API + '/video_feed?' + Date.now();
+  stream.style.display = 'block';
+  placeholder.style.display = 'none';
+  dot.className = 'dot live';
+  statusText.textContent = 'Đang phát';
+  cameraActive = true;
+
+  document.getElementById('btn-start-cam').style.display = 'none';
+  document.getElementById('btn-stop-cam').style.display = '';
+
+  // Poll recent events
+  pollInterval = setInterval(loadRecentEvents, 3000);
+  loadRecentEvents();
+}
+
+function stopCamera() {
+  const stream = document.getElementById('cam-stream');
+  const placeholder = document.getElementById('cam-placeholder');
+  const dot = document.getElementById('cam-dot');
+  const statusText = document.getElementById('cam-status-text');
+
+  stream.src = '';
+  stream.style.display = 'none';
+  placeholder.style.display = 'block';
+  dot.className = 'dot off';
+  statusText.textContent = 'Chưa bật';
+  cameraActive = false;
+
+  document.getElementById('btn-start-cam').style.display = '';
+  document.getElementById('btn-stop-cam').style.display = 'none';
+
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+async function loadRecentEvents() {
+  try {
+    const res = await fetch(`${API}/today_attendance`);
+    const data = await res.json();
+    renderRecentEvents(data.records || []);
+  } catch {}
+}
+
+function renderRecentEvents(records) {
+  const el = document.getElementById('recent-events');
+  if (!records.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><p>Chưa có sự kiện nào</p></div>`;
+    return;
+  }
+  const last10 = [...records].reverse().slice(0, 10);
+  el.innerHTML = last10.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:14px;font-weight:600">${r.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${r.user_id}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge ${r.event === 'check-in' ? 'in' : 'out'}">${r.event === 'check-in' ? '▶ Check-in' : '⏹ Check-out'}</span>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">${r.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── ATTENDANCE ──
+async function loadAttendance() {
+  const date = document.getElementById('date-picker').value;
+  const wrap = document.getElementById('attendance-table-wrap');
+  wrap.innerHTML = `<div class="loading"><span class="spinner"></span>Đang tải...</div>`;
+
+  try {
+    const res = await fetch(`${API}/attendance/${date}`);
+    const data = await res.json();
+    const records = data.records || [];
+
+    const total = records.length;
+    const ins = records.filter(r => r.event === 'check-in').length;
+    const outs = records.filter(r => r.event === 'check-out').length;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-in').textContent = ins;
+    document.getElementById('stat-out').textContent = outs;
+
+    if (!records.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Không có dữ liệu điểm danh ngày này</p></div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Họ tên</th>
+            <th>Mã nhân viên</th>
+            <th>Thời gian</th>
+            <th>Sự kiện</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${records.map((r, i) => `
+            <tr>
+              <td style="color:var(--text2)">${i+1}</td>
+              <td><b>${r.name}</b></td>
+              <td><code style="font-size:12px;color:var(--text2)">${r.user_id}</code></td>
+              <td>${r.time}</td>
+              <td><span class="badge ${r.event === 'check-in' ? 'in' : 'out'}">${r.event === 'check-in' ? '▶ Check-in' : '⏹ Check-out'}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Không thể kết nối đến server</p></div>`;
+  }
+}
+
+// ── REGISTER ──
+let selectedFiles = [];
+
+function previewImages(event) {
+  const files = Array.from(event.target.files);
+  selectedFiles = files;
+  const grid = document.getElementById('preview-grid');
+  grid.innerHTML = '';
+  files.forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement('div');
+      div.className = 'preview-item';
+      div.innerHTML = `<img src="${e.target.result}"><button class="remove-img" onclick="removeImage(${i})">✕</button>`;
+      grid.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeImage(index) {
+  selectedFiles.splice(index, 1);
+  const dt = new DataTransfer();
+  selectedFiles.forEach(f => dt.items.add(f));
+  document.getElementById('reg-images').files = dt.files;
+  previewImages({ target: { files: dt.files } });
+}
+
+async function registerFace() {
+  const id = document.getElementById('reg-id').value.trim();
+  const name = document.getElementById('reg-name').value.trim();
+  const successEl = document.getElementById('reg-alert-success');
+  const errorEl = document.getElementById('reg-alert-error');
+
+  successEl.style.display = 'none';
+  errorEl.style.display = 'none';
+
+  if (!id || !name) {
+    errorEl.textContent = '⚠️ Vui lòng nhập đầy đủ mã nhân viên và họ tên.';
+    errorEl.style.display = 'block'; return;
+  }
+  if (selectedFiles.length === 0) {
+    errorEl.textContent = '⚠️ Vui lòng chọn ít nhất 1 ảnh khuôn mặt.';
+    errorEl.style.display = 'block'; return;
+  }
+
+  const formData = new FormData();
+  formData.append('user_id', id);
+  formData.append('name', name);
+  selectedFiles.forEach(f => formData.append('face_images', f));
+
+  try {
+    const res = await fetch(`${API}/register_face`, { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errorEl.textContent = '❌ ' + (data.error || 'Đăng ký thất bại');
+      errorEl.style.display = 'block'; return;
+    }
+
+    successEl.textContent = `✅ Đã đăng ký thành công "${name}" với ${data.image_count} ảnh.`;
+    successEl.style.display = 'block';
+
+    document.getElementById('reg-id').value = '';
+    document.getElementById('reg-name').value = '';
+    document.getElementById('preview-grid').innerHTML = '';
+    selectedFiles = [];
+  } catch {
+    errorEl.textContent = '❌ Không thể kết nối đến server.';
+    errorEl.style.display = 'block';
+  }
+}
+
+// ── USERS ──
+async function loadUsers() {
+  const grid = document.getElementById('users-grid');
+  grid.innerHTML = `<div class="loading"><span class="spinner"></span>Đang tải...</div>`;
+  try {
+    const res = await fetch(`${API}/users`);
+    const data = await res.json();
+    const users = data.users || [];
+    document.getElementById('user-count').textContent = users.length;
+    if (!users.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>Chưa có người dùng nào</p></div>`;
+      return;
+    }
+    grid.innerHTML = users.map(u => `
+      <div class="user-card">
+        <div class="user-avatar">${u.name[0].toUpperCase()}</div>
+        <div class="u-name">${u.name}</div>
+        <div class="u-id">${u.id}</div>
+      </div>
+    `).join('');
+  } catch {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Không thể kết nối đến server</p></div>`;
+  }
+}
+
+// ── INIT ──
+window.onload = () => {
+  const saved = localStorage.getItem('session');
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      initApp();
+    } catch { localStorage.removeItem('session'); }
+  }
+};
+</script>
+</body>
+</html>
